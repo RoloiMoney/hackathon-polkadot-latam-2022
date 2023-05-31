@@ -1,12 +1,8 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
-use ink_lang as ink;
+#![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 #[ink::contract]
 mod workshop {
-    use ink_lang::utils::initialize_contract;
-    use ink_storage::traits::SpreadAllocate;
-    use ink_storage::Mapping;
+    use ink::storage::Mapping;
 
     #[ink(event)]
     pub struct Deposited {
@@ -30,7 +26,6 @@ mod workshop {
     }
 
     #[ink(storage)]
-    #[derive(SpreadAllocate)]
     pub struct Workshop {
         balances: Mapping<AccountId, u128>,
     }
@@ -38,9 +33,9 @@ mod workshop {
     impl Workshop {
         #[ink(constructor)]
         pub fn new() -> Self {
-            initialize_contract(|contract: &mut Self| {
-                contract.balances = <Mapping<AccountId, u128>>::default();
-            })
+            Self {
+                balances: Mapping::default(),
+            }
         }
 
         #[ink(message)]
@@ -118,21 +113,20 @@ mod workshop {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ink_lang as ink;
 
-        fn get_default_accounts() -> ink_env::test::DefaultAccounts<ink_env::DefaultEnvironment> {
-            ink_env::test::default_accounts::<ink_env::DefaultEnvironment>()
+        fn get_default_accounts() -> ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment> {
+            ink::env::test::default_accounts::<ink::env::DefaultEnvironment>()
         }
 
         fn init() -> (
             Workshop,
-            ink_env::test::DefaultAccounts<ink_env::DefaultEnvironment>,
+            ink::env::test::DefaultAccounts<ink::env::DefaultEnvironment>,
         ) {
             (Workshop::new(), get_default_accounts())
         }
 
         fn set_caller(sender: AccountId) {
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(sender);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(sender);
         }
 
         #[ink::test]
