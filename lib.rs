@@ -7,13 +7,13 @@ mod workshop {
     #[ink(event)]
     pub struct Deposited {
         from: AccountId,
-        balance: u128,
+        balance: Balance,
     }
 
     #[ink(event)]
     pub struct Withdrawn {
         to: AccountId,
-        balance: u128,
+        balance: Balance,
     }
 
     #[derive(PartialEq, Debug, scale::Encode, scale::Decode)]
@@ -27,7 +27,7 @@ mod workshop {
 
     #[ink(storage)]
     pub struct Workshop {
-        balances: Mapping<AccountId, u128>,
+        balances: Mapping<AccountId, Balance>,
     }
 
     impl Workshop {
@@ -39,7 +39,7 @@ mod workshop {
         }
 
         #[ink(message)]
-        pub fn get_balance_by_account(&self) -> Result<u128, ContractError> {
+        pub fn get_balance_by_account(&self) -> Result<Balance, ContractError> {
             let caller = self.get_caller();
 
             match self.balances.get(caller) {
@@ -51,8 +51,8 @@ mod workshop {
         #[ink(message, payable)]
         pub fn deposit(&mut self) -> Result<(), ContractError> {
             let caller = self.get_caller();
-            let transferred_funds = self.check_and_get_transferred_funds()?;
-            let account_balance = self.get_balance_by_account().unwrap_or(0);
+            let transferred_funds: Balance = self.check_and_get_transferred_funds()?;
+            let account_balance: Balance = self.get_balance_by_account().unwrap_or(0);
 
             let new_balance = account_balance + transferred_funds;
 
@@ -67,15 +67,18 @@ mod workshop {
         }
 
         #[ink(message)]
-        pub fn withdraw(&mut self, withdrawal_amount: Option<u128>) -> Result<(), ContractError> {
+        pub fn withdraw(
+            &mut self,
+            withdrawal_amount: Option<Balance>,
+        ) -> Result<(), ContractError> {
             let caller = self.get_caller();
-            let mut account_balance = self.get_balance_by_account()?;
+            let mut account_balance: Balance = self.get_balance_by_account()?;
 
             if account_balance == 0 {
                 return Err(ContractError::AccountWithoutBalance);
             }
 
-            let withdrawal_amount = withdrawal_amount.unwrap_or(account_balance);
+            let withdrawal_amount: Balance = withdrawal_amount.unwrap_or(account_balance);
 
             if withdrawal_amount > account_balance {
                 return Err(ContractError::ExpectedWithdrawalAmountExceedsAccountBalance);
@@ -100,8 +103,8 @@ mod workshop {
             self.env().caller()
         }
 
-        fn check_and_get_transferred_funds(&self) -> Result<u128, ContractError> {
-            let transferred_funds = self.env().transferred_value();
+        fn check_and_get_transferred_funds(&self) -> Result<Balance, ContractError> {
+            let transferred_funds: Balance = self.env().transferred_value();
             if transferred_funds == 0 {
                 return Err(ContractError::InsufficientFunds);
             }
